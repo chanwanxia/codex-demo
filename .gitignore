@@ -1,0 +1,56 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+yarn.lock
+package-lock.json
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+.nuxt/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Testing
+coverage/
+*.coverage
+
+# Vue/React specific
+*.vuepress/.cache/
+*.vuepress/.temp/
+
+# TypeScript
+*.tsbuildinfo
+
+# Misc
+*.pem
+*.key
+*.cert

@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>电商待办清单 · Vue版</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #ff6b35 0%, #f7c59f 50%, #ef476f 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+      width: 100%;
+      max-width: 520px;
+      padding: 24px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    h1 {
+      color: #333;
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .subtitle {
+      color: #ff6b35;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+    .input-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    #todoInput {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid #ffd4b8;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    #todoInput:focus { border-color: #ff6b35; }
+    #addBtn {
+      padding: 12px 20px;
+      background: linear-gradient(135deg, #ff6b35, #ef476f);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.2s;
+      box-shadow: 0 4px 12px rgba(239, 71, 111, 0.3);
+    }
+    #addBtn:hover { 
+      box-shadow: 0 6px 16px rgba(239, 71, 111, 0.4);
+      transform: translateY(-1px);
+    }
+    #addBtn:active { transform: translateY(0); }
+    .filters {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      justify-content: center;
+    }
+    .filter-btn {
+      padding: 6px 14px;
+      border: 1px solid #ffd4b8;
+      background: #fff;
+      border-radius: 20px;
+      font-size: 12px;
+      color: #666;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-btn.active {
+      background: #ff6b35;
+      color: #fff;
+      border-color: #ff6b35;
+    }
+    .filter-btn:hover:not(.active) {
+      border-color: #ff6b35;
+      color: #ff6b35;
+    }
+    .todo-list {
+      list-style: none;
+      max-height: 360px;
+      overflow-y: auto;
+    }
+    .todo-item {
+      display: flex;
+      align-items: center;
+      padding: 14px;
+      background: linear-gradient(135deg, #fff9f6, #fff);
+      border: 1px solid #ffe8d9;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      gap: 12px;
+      transition: all 0.2s;
+      animation: slideIn 0.2s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .todo-item:hover {
+      border-color: #ff6b35;
+      box-shadow: 0 4px 12px rgba(255, 107, 53, 0.1);
+    }
+    .todo-item.completed {
+      background: #f8f9fa;
+      border-color: #e0e0e0;
+    }
+    .todo-item.completed .todo-text {
+      text-decoration: line-through;
+      color: #999;
+    }
+    .todo-checkbox {
+      width: 22px;
+      height: 22px;
+      cursor: pointer;
+      accent-color: #ff6b35;
+    }
+    .todo-text {
+      flex: 1;
+      color: #333;
+      font-size: 14px;
+      word-break: break-word;
+    }
+
+    .todo-meta {
+      font-size: 11px;
+      color: #ccc;
+      margin-left: 8px;
+      cursor: help;
+      text-decoration: underline dotted;
+      text-decoration-color: #ddd;
+    }
+    .todo-meta:hover {
+      color: #ff6b35;
+    }
+
+    .delete-btn {
+      background: #fff0f0;
+      color: #ef476f;
+      border: 1px solid #ffd4d4;
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .delete-btn:hover { 
+      background: #ef476f; 
+      color: #fff;
+      border-color: #ef476f;
+    }
+    .empty-state {
+      text-align: center;
+      color: #ccc;
+      padding: 30px 20px;
+      font-size: 14px;
+    }
+    .empty-state::before {
+      content: "🛒";
+      display: block;
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+    .stats {
+      text-align: center;
+      color: #666;
+      font-size: 12px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .stats strong { color: #ff6b35; }
+    .clear-completed {
+      background: none;
+      border: none;
+      color: #999;
+      font-size: 12px;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .clear-completed:hover { color: #ef476f; }
+    .category-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      background: #fff0e6;
+      color: #ff6b35;
+      border-radius: 4px;
+      font-size: 10px;
+      margin-left: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="container">
+      <div class="header">
+        <h1>🛍️ 电商待办</h1>
+        <div class="subtitle">用心记录 · 温暖陪伴 · 轻松搞定 ✨</div>
+      </div>
+      
+      <div class="input-group">
+        <input 
+          type="text" 
+          id="todoInput" 
+          v-model="newTodo" 
+          @keyup.enter="addTodo"
+          placeholder="例如：补货运动鞋、设置促销..." 
+        />
+        <button id="addBtn" @click="addTodo">＋ 添加</button>
+      </div>
+      
+      <div class="filters">
+        <button 
+          class="filter-btn" 
+          :class="{ active: filter === 'all' }"
+          @click="filter = 'all'"
+        >全部</button>
+        <button 
+          class="filter-btn" 
+          :class="{ active: filter === 'active' }"
+          @click="filter = 'active'"
+        >待完成</button>
+        <button 
+          class="filter-btn" 
+          :class="{ active: filter === 'completed' }"
+          @click="filter = 'completed'"
+        >已完成</button>
+      </div>
+      
+      <ul class="todo-list">
+        <li v-if="filteredTodos.length === 0" class="empty-state">
+          {{ emptyMessage }}
+        </li>
+        <li 
+          v-for="todo in filteredTodos" 
+          :key="todo.id" 
+          class="todo-item"
+          :class="{ completed: todo.completed }"
+        >
+          <input 
+            type="checkbox" 
+            class="todo-checkbox" 
+            v-model="todo.completed"
+            @change="saveTodos"
+          />
+          <span class="todo-text">{{ todo.text }}</span>
+          <span v-if="todo.category" class="category-tag">{{ todo.category }}</span>
+          <span class="todo-meta" :title="formatTime(todo.createdAt, true)">{{ formatTime(todo.createdAt) }}</span>
+          <button class="delete-btn" @click="deleteTodo(todo.id)">删除</button>
+        </li>
+      </ul>
+      
+      <div class="stats">
+        <span>共 <strong>{{ total }}</strong> 项 · 已完成 <strong>{{ completedCount }}</strong> 项</span>
+        <button 
+          v-if="completedCount > 0" 
+          class="clear-completed"
+          @click="clearCompleted"
+        >清空已完成</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const { createApp, ref, computed, onMounted, watch } = Vue;
+
+    createApp({
+      setup() {
+        const newTodo = ref('');
+        const todos = ref([]);
+        const filter = ref('all');
+        const STORAGE_KEY = 'vue-ecommerce-todos';
+
+        // 加载本地存储
+        const loadTodos = () => {
+          try {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) todos.value = JSON.parse(saved);
+          } catch(e) { console.error('加载失败:', e); }
+        };
+
+        // 保存本地存储
+        const saveTodos = () => {
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(todos.value));
+          } catch(e) { console.error('保存失败:', e); }
+        };
+
+        // 格式化时间
+        const formatTime = (iso, full = false) => {
+          if (!iso) return '';
+          const date = new Date(iso);
+          if (full) {
+            return date.toLocaleString('zh-CN', { 
+              year: 'numeric', month: '2-digit', day: '2-digit',
+              hour: '2-digit', minute: '2-digit', hour12: false 
+            }).replace(/\//g, '-').replace(',', '');
+          }
+          const now = new Date();
+          const diff = now - date;
+          
+          if (diff < 60000) return '刚刚';
+          if (diff < 3600000) return `${Math.floor(diff/60000)}分钟前`;
+          if (diff < 86400000) return `${Math.floor(diff/3600000)}小时前`;
+          return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
+        };
+
+        // 添加任务
+        const addTodo = () => {
+          const text = newTodo.value.trim();
+          if (!text) return;
+          
+          todos.value.unshift({
+            id: Date.now().toString(),
+            text,
+            completed: false,
+            createdAt: new Date().toISOString(),
+            category: guessCategory(text)
+          });
+          
+          saveTodos();
+          newTodo.value = '';
+          document.getElementById('todoInput')?.focus();
+        };
+
+        // 智能猜测分类
+        const guessCategory = (text) => {
+          const keywords = {
+            '运营': ['促销', '活动', '上架', '下架', '优化'],
+            '客服': ['回复', '售后', '咨询', '评价'],
+            '仓储': ['补货', '发货', '库存', '盘点'],
+            '财务': ['对账', '结算', '发票', '退款']
+          };
+          for (const [cat, words] of Object.entries(keywords)) {
+            if (words.some(w => text.includes(w))) return cat;
+          }
+          return null;
+        };
+
+        // 删除任务
+        const deleteTodo = (id) => {
+          const idx = todos.value.findIndex(t => t.id === id);
+          if (idx > -1) {
+            todos.value.splice(idx, 1);
+            saveTodos();
+          }
+        };
+
+        // 清空已完成
+        const clearCompleted = () => {
+          todos.value = todos.value.filter(t => !t.completed);
+          saveTodos();
+        };
+
+        // 筛选计算
+        const filteredTodos = computed(() => {
+          if (filter.value === 'active') return todos.value.filter(t => !t.completed);
+          if (filter.value === 'completed') return todos.value.filter(t => t.completed);
+          return todos.value;
+        });
+
+        const total = computed(() => todos.value.length);
+        const completedCount = computed(() => todos.value.filter(t => t.completed).length);
+        const emptyMessage = computed(() => {
+          if (filter.value === 'all') return '暂无任务，开始添加吧～';
+          if (filter.value === 'active') return '🎉 所有任务都完成啦！';
+          return '暂无已完成的任务';
+        });
+
+        // 监听变化自动保存
+        watch(todos, saveTodos, { deep: true });
+
+        // 初始化
+        onMounted(() => {
+          loadTodos();
+          document.getElementById('todoInput')?.focus();
+        });
+
+        return {
+          newTodo, todos, filter,
+          addTodo, deleteTodo, clearCompleted, saveTodos,
+          filteredTodos, total, completedCount, emptyMessage,
+          formatTime
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
